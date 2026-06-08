@@ -24,7 +24,9 @@ const EDGES = [
   ['payment-service', 'notification-service'],
 ]
 
-function getNode(name: string) { return NODE_LAYOUT.find(n => n.name === name)! }
+function getNode(name: string, nodes: typeof NODE_LAYOUT) {
+  return nodes.find(n => n.name === name) || NODE_LAYOUT.find(n => n.name === name)!
+}
 
 const COLORS = { origin: '#f85149', cascade: '#bc8cff', healthy: '#3fb950' }
 const LABELS = { origin: 'ORIGIN', cascade: 'CASCADE', healthy: 'HEALTHY' }
@@ -32,7 +34,25 @@ const LABELS = { origin: 'ORIGIN', cascade: 'CASCADE', healthy: 'HEALTHY' }
 export default function CascadeMap({ data }: { data: CascadeData }) {
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
 
-  const activeNode = NODE_LAYOUT.find(n => n.name === selectedNode)
+  // Dynamically map statuses based on backend data payload (Gap 4)
+  const dynamicNodes = NODE_LAYOUT.map(node => {
+    if (data) {
+      if (node.name === data.origin_service) {
+        return { ...node, type: 'origin', reason: data.fix_recommendation || node.reason }
+      }
+      const cascadeMatch = data.cascade_services?.find(c => c.name === node.name)
+      if (cascadeMatch) {
+        return { ...node, type: 'cascade', reason: cascadeMatch.reason || node.reason }
+      }
+      const healthyMatch = data.healthy_services?.find(h => h.name === node.name)
+      if (healthyMatch) {
+        return { ...node, type: 'healthy', reason: healthyMatch.reason || node.reason }
+      }
+    }
+    return node
+  })
+
+  const activeNode = dynamicNodes.find(n => n.name === selectedNode)
 
   return (
     <div className="grid-2" style={{ gap: 20 }}>
@@ -42,7 +62,7 @@ export default function CascadeMap({ data }: { data: CascadeData }) {
           <svg viewBox="0 0 600 460" className="cascade-svg" style={{ background: 'var(--bg-base)', borderRadius: 8, border: '1px solid var(--border)' }}>
             {/* Edges */}
             {EDGES.map(([from, to], i) => {
-              const f = getNode(from), t = getNode(to)
+              const f = getNode(from, dynamicNodes), t = getNode(to, dynamicNodes)
               const isHighlighted = selectedNode === from || selectedNode === to
               return (
                 <line
@@ -60,7 +80,7 @@ export default function CascadeMap({ data }: { data: CascadeData }) {
             })}
 
             {/* Nodes */}
-            {NODE_LAYOUT.map(node => {
+            {dynamicNodes.map(node => {
               const color = COLORS[node.type as keyof typeof COLORS]
               const label = LABELS[node.type as keyof typeof LABELS]
               const isSelected = selectedNode === node.name
@@ -124,7 +144,7 @@ export default function CascadeMap({ data }: { data: CascadeData }) {
           <div className="card">
             <div className="card-title mb-4">Fix Recommendation</div>
             <div className="font-mono text-sm" style={{ color: 'var(--success)', lineHeight: 2 }}>
-              Fix auth-service only. Everything else recovers automatically.
+              {data?.fix_recommendation || "Fix auth-service only. Everything else recovers automatically."}
             </div>
           </div>
         )}
@@ -136,15 +156,15 @@ export default function CascadeMap({ data }: { data: CascadeData }) {
             </svg>
             Warning: Do NOT Restart
           </div>
-          {data.do_not_restart.map(s => (
+          {data?.do_not_restart?.map(s => (
             <div key={s} className="font-mono text-sm" style={{ color: 'var(--danger)', lineHeight: 2 }}>* {s}</div>
-          ))}
+          )) || <div className="font-mono text-sm" style={{ color: 'var(--danger)', lineHeight: 2 }}>* api-gateway</div>}
           <div className="text-sm text-muted mt-2">Restarting these will not resolve the root cause.</div>
         </div>
 
         <div className="card">
           <div className="card-title mb-4">Service Status</div>
-          {NODE_LAYOUT.map(node => (
+          {dynamicNodes.map(node => (
             <div
               key={node.name}
               className="flex items-center gap-2"
