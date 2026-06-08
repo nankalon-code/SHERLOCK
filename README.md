@@ -242,5 +242,3 @@ Run `backend/database.py::SCHEMA_SQL` in your Supabase SQL editor.
 
 ---
 
-*Built by a first-year Computer Science student for the Microsoft AI Agents Hackathon 2026.*
-*Submission deadline: June 14, 2026.*
