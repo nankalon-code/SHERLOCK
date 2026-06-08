@@ -81,3 +81,38 @@ CREATE TABLE IF NOT EXISTS service_metrics (
     anomaly_score   FLOAT,
     recorded_at     TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Similarity search helper function using pgvector <=> cosine distance
+CREATE OR REPLACE FUNCTION match_pattern_signatures (
+  query_embedding vector(1536),
+  match_threshold float,
+  match_count int
+)
+RETURNS TABLE (
+  id int,
+  incident_id int,
+  service_name text,
+  root_cause_cat text,
+  dependency text,
+  affected_files text[],
+  similarity float
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    ps.id,
+    ps.incident_id,
+    ps.service_name,
+    ps.root_cause_cat,
+    ps.dependency,
+    ps.affected_files,
+    1 - (ps.embedding <=> query_embedding) AS similarity
+  FROM pattern_signatures ps
+  WHERE 1 - (ps.embedding <=> query_embedding) > match_threshold
+  ORDER BY ps.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$;
+
