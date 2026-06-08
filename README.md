@@ -209,21 +209,5 @@ Sherlock is designed for production stability with graceful fallback states:
 
 ---
 
-## Prizes Targeted
 
-- **Best Reasoning Agent** — Pre-mortem + cascade map + similar incident memory = most complete reasoning story.
-- **Best Use of IQ Tools** — All three IQs integrated: Foundry IQ (reasoning), Fabric IQ (analytics), Work IQ (routing).
-- **Top Student Award** — Built by a **first-year Computer Science student** (Top Student Award eligibility).
-- **Best Overall** — Sherlock resolves the universal developer headache of 2 AM on-call incidents.
 
----
-
-## 📝 A note from the builder
-
-This is my first hackathon, built over 5 days as a first-year Computer Science student. 
-I built Sherlock because I watched a senior engineer spend 4 hours debugging 
-a production incident that turned out to be a one-line JWT API change. 
-The problem felt solvable with the right reasoning chain. By isolating log signals, 
-git diffs, and library changelogs into discrete grounded steps, we can diagnose 
-cascading incidents in seconds rather than hours. This project represents my vision 
-for the future of developer tooling—built with the power of Azure AI Foundry.
