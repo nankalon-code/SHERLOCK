@@ -90,8 +90,8 @@ export default function IncidentView({ incidentId: _incidentId }: { incidentId: 
     }, 680)
   }
 
-  const confidenceData = isDone ? DEMO_STEPS[7].result as Parameters<typeof ConfidenceAnatomy>[0]['data'] : null
-  const cascadeData = isDone ? DEMO_STEPS[9].result as Parameters<typeof CascadeMap>[0]['data'] : null
+  const confidenceData = isDone ? (DEMO_STEPS[7].result as unknown) as Parameters<typeof ConfidenceAnatomy>[0]['data'] : null
+  const cascadeData = isDone ? (DEMO_STEPS[9].result as unknown) as Parameters<typeof CascadeMap>[0]['data'] : null
   const fixData = isDone ? DEMO_STEPS[8].result : null
 
   const TABS = [
