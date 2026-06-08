@@ -1,2 +1,3 @@
+@echo off
 git add -A
-git commit -m "chore: initial Sherlock scaffold"
+git commit -m "%~1"
