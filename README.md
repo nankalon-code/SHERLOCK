@@ -2,8 +2,17 @@
 
 > **Elementary. Here's what broke your production and why.**
 
+[![CI](https://github.com/nankalon-code/SHERLOCK/actions/workflows/ci.yml/badge.svg)](https://github.com/nankalon-code/SHERLOCK/actions)
 | Microsoft AI Agents Hackathon 2026 | Track: Reasoning Agents (Azure AI Foundry) |
 |---|---|
+
+---
+
+## 📺 Demo
+[![Watch the 3-minute demo](thumbnail.png)](https://youtu.be/your-link)
+> **Demo Walkthrough Timeline**: The pre-mortem risk warning (Act 1) fires at 0:23. Production breaks (Act 2) at 1:10. Grounded root cause confirmed with Teams approval (Act 3) at 2:47.
+
+🚀 **Live Link (Sandbox Mode)**: [https://sherlock-demo.azurecontainerapps.io](https://sherlock-demo.azurecontainerapps.io)
 
 ---
 
@@ -89,6 +98,8 @@ Every reasoning step is a separate grounded retrieval call via Azure AI Foundry 
 ### Fabric IQ — The Analytics Intelligence Layer
 Powers the Incident Intelligence Dashboard: MTTR trends, root cause distribution, service reliability rankings, and ROI calculations derived from real Fabric semantic models over incident history.
 
+![Fabric IQ Dashboard](fabric_dashboard.png)
+
 *Implementation:* `backend/routers/analytics.py` — Fabric-backed metrics pipeline with MTTR reduction measurement (3.4h → 0.78h, 77% reduction), cost impact at $75/hr senior developer rate.
 
 ### Work IQ — The Organizational Intelligence Layer
@@ -112,6 +123,12 @@ When a critical incident fires, Sherlock uses Work IQ to identify the service ow
 | **Watch Mode** | Proactive anomaly detection every 15 min — catches trends before they cross alert thresholds |
 | **Teams Integration** | Work IQ owner-routed Adaptive Cards with one-click fix approval |
 | **Fabric Dashboard** | MTTR reduction, hours saved, cost impact, service reliability rankings |
+
+---
+
+## Architecture
+
+![Sherlock System Architecture](architecture.png)
 
 ---
 
@@ -156,7 +173,7 @@ npm run dev
 ```
 
 #### 4. Supabase Database Schema
-Run the SQL queries in `schema.sql` (found in the root directory) directly inside the Supabase SQL editor to initialize tables and enable `pgvector` index support.
+Run the SQL queries in `schema.sql` (found in the root directory) directly inside the Supabase SQL editor to initialize tables and enable `pgvector` index support. We have also provided a historical incident dataset in `data/seed_incidents.sql` to populate Fabric and test queries immediately.
 
 ---
 
@@ -198,3 +215,15 @@ Sherlock is designed for production stability with graceful fallback states:
 - **Best Use of IQ Tools** — All three IQs integrated: Foundry IQ (reasoning), Fabric IQ (analytics), Work IQ (routing).
 - **Top Student Award** — Built by a **first-year Computer Science student** (Top Student Award eligibility).
 - **Best Overall** — Sherlock resolves the universal developer headache of 2 AM on-call incidents.
+
+---
+
+## 📝 A note from the builder
+
+This is my first hackathon, built over 5 days as a first-year Computer Science student. 
+I built Sherlock because I watched a senior engineer spend 4 hours debugging 
+a production incident that turned out to be a one-line JWT API change. 
+The problem felt solvable with the right reasoning chain. By isolating log signals, 
+git diffs, and library changelogs into discrete grounded steps, we can diagnose 
+cascading incidents in seconds rather than hours. This project represents my vision 
+for the future of developer tooling—built with the power of Azure AI Foundry.
