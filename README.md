@@ -2,7 +2,7 @@
 
 > **Elementary. Here's what broke your production and why.**
 
-**Built by a first-year Computer Science student** | Microsoft AI Agents Hackathon 2026
+| Microsoft AI Agents Hackathon 2026
 
 ---
 
