@@ -198,23 +198,66 @@ export default function IncidentView({ incidentId: _incidentId }: { incidentId: 
 
       <div className="p-6">
         {isDone && (
-          <>
-            <div className="alert-banner success">
-              <svg className="alert-banner-icon" viewBox="0 0 16 16" fill="none" stroke="var(--success)" strokeWidth="1.5"><path d="M2 8l4 4 8-8"/></svg>
-              <div>
-                <strong>What's still safe:</strong> Data reads, search, notifications, and the admin dashboard are all functioning normally.
-                <span className="text-danger" style={{ marginLeft: 6 }}>Do not restart api-gateway — it will not resolve the root cause.</span>
+          <div className="grid-2 mb-6" style={{ gap: '16px' }}>
+            <div className="card" style={{ border: '1px solid rgba(63,185,80,0.3)', background: 'rgba(63,185,80,0.02)' }}>
+              <div className="card-title mb-3" style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 16, height: 16 }}>
+                  <path d="M2 8l4 4 8-8"/>
+                </svg>
+                Blast Radius Audit: 2 Services Verified Safe
+              </div>
+              <div className="space-y" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: 'var(--bg-base)', borderRadius: '4px' }}>
+                  <span className="svc-dot green" />
+                  <span className="font-mono" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>notification-service</span>
+                  <span style={{ marginLeft: 'auto' }}>Queue buffering active · Unaffected by auth API drift</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: 'var(--bg-base)', borderRadius: '4px' }}>
+                  <span className="svc-dot green" />
+                  <span className="font-mono" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>data-service</span>
+                  <span style={{ marginLeft: 'auto' }}>Serving cached resources · No active session dependencies</span>
+                </div>
+              </div>
+              <div className="text-xs text-muted mt-3">
+                <strong>Directive:</strong> Services B and C are safe. Do not restart these.
               </div>
             </div>
-            <div className="alert-banner warning">
-              <svg className="alert-banner-icon" viewBox="0 0 16 16" fill="none" stroke="var(--warning)" strokeWidth="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11v.5"/></svg>
-              <div>
-                <strong>Pattern match found.</strong> 52 days ago: similar jwt validation failure in auth-service after a dependency update.
-                Fix resolved it in 8 minutes.{' '}
-                <span className="text-accent">[PR #289] [Incident #31]</span>
+
+            <div className="card" style={{ border: '1px solid rgba(248,81,73,0.3)', background: 'rgba(248,81,73,0.02)' }}>
+              <div className="card-title mb-3" style={{ color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 16, height: 16 }}>
+                  <circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11v.5"/>
+                </svg>
+                Mitigation Advisory: Do NOT Restart
+              </div>
+              <div className="space-y" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: 'var(--bg-base)', borderRadius: '4px' }}>
+                  <span className="svc-dot red" />
+                  <span className="font-mono" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>api-gateway</span>
+                  <span style={{ marginLeft: 'auto', color: 'var(--danger)' }}>Do NOT Restart</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: 'var(--bg-base)', borderRadius: '4px' }}>
+                  <span className="svc-dot red" />
+                  <span className="font-mono" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>payment-service</span>
+                  <span style={{ marginLeft: 'auto', color: 'var(--danger)' }}>Do NOT Restart</span>
+                </div>
+              </div>
+              <div className="text-xs text-muted mt-3">
+                <strong>Crucial:</strong> Restarting the gateway or payment pipeline will not resolve token verification mismatch and could corrupt transaction states.
               </div>
             </div>
-          </>
+
+            <div className="card" style={{ gridColumn: 'span 2', border: '1px solid rgba(188,140,255,0.3)', background: 'rgba(188,140,255,0.02)' }}>
+              <div className="flex items-center gap-3">
+                <svg viewBox="0 0 16 16" fill="none" stroke="var(--cascade)" strokeWidth="1.5" style={{ width: 18, height: 18, flexShrink: 0 }}>
+                  <circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11v.5"/>
+                </svg>
+                <div style={{ fontSize: '13px' }}>
+                  <strong>Memory Matching:</strong> Identical signature matched to **Incident #31** (52 days ago). Resolving the token format issue in `session.js` via **PR #313** will restore downstream health instantly.
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Tab bar */}
