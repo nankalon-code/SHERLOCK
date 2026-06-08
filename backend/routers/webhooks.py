@@ -99,12 +99,11 @@ async def run_pre_mortem(pr: dict, repo: dict):
 def format_pr_comment(pr: dict, risk: dict, elapsed: float) -> str:
     score = risk.get("risk_score", 38)
     level = risk.get("risk_level", "elevated").upper()
-    level_emoji = {"LOW": "🟢", "ELEVATED": "🟡", "HIGH": "🔴", "CRITICAL": "🚨"}.get(level, "⚠️")
     flags = risk.get("flags", [])
 
     flags_md = ""
     for f in flags:
-        flags_md += f"\n→ **{f.get('reason', '')}**\n"
+        flags_md += f"\n- **{f.get('reason', '')}**\n"
         flags_md += f"  {f.get('detail', '')}\n"
         for c in f.get("citations", []):
             flags_md += f"  `[Source: {c}]`\n"
@@ -113,9 +112,9 @@ def format_pr_comment(pr: dict, risk: dict, elapsed: float) -> str:
     if risk.get("draft_fix_available"):
         draft_fix = f"\n**Recommended:** {risk.get('recommended_action', '')}\nDraft fix available — [View fix]\n"
 
-    return f"""## 🔍 Sherlock Risk Assessment
+    return f"""## Sherlock Risk Assessment
 
-**Incident Probability: {score:.0f}%** {level_emoji} `{level}`
+**Incident Probability: {score:.0f}%** · `[{level}]`
 
 ### Why I'm flagging this:
 {flags_md}
