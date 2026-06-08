@@ -4,9 +4,13 @@ Catches below-threshold patterns before they page anyone
 """
 from fastapi import APIRouter, BackgroundTasks
 from database import get_supabase
+import os
 import asyncio
 
 router = APIRouter()
+
+WATCH_MODE_INTERVAL_MIN = int(os.getenv("WATCH_MODE_INTERVAL_MIN", "15"))
+
 
 DEMO_WATCH_FEED = [
     {
@@ -79,7 +83,8 @@ async def trigger_scan(background_tasks: BackgroundTasks):
 
 
 async def run_anomaly_scan():
-    """Scheduled anomaly detection — runs every 15 min."""
+    """Scheduled anomaly detection."""
+    print(f"Running scheduled anomaly scan (interval: {WATCH_MODE_INTERVAL_MIN} min)")
     try:
         db = get_supabase()
         services = db.table("service_graph").select("service_name").execute().data
