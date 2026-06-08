@@ -27,7 +27,7 @@ export default function ConfidenceAnatomy({ data }: { data: ConfData }) {
     <div className="grid-2" style={{ gap: 20 }}>
       <div className="card">
         <div className="card-title mb-4">Confidence Anatomy — 4-Dimension Breakdown</div>
-        <div className="confidence-grid">
+        <div className="confidence-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           {DIMS.map(dim => {
             const d = data[dim.key]
             const isSelected = selectedDim === dim.key
