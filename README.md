@@ -2,39 +2,44 @@
 
 > **Elementary. Here's what broke your production and why.**
 
-| Microsoft AI Agents Hackathon 2026
+| Microsoft AI Agents Hackathon 2026 | Track: Reasoning Agents (Azure AI Foundry) |
+|---|---|
 
 ---
+
+![Sherlock Reasoning Dashboard](screenshot.png)
 
 ## The Three-Act Demo
 
 ### Act 1 — The Prediction (0:00–1:00)
-Open PR #312 in the demo repo. It bumps `jsonwebtoken` 8.5.1→9.0.0 and touches `auth/session.js`. Within 60 seconds, Sherlock posts a comment on GitHub:
+Open PR #312 in the demo repository. It bumps `jsonwebtoken` from `8.5.1` to `9.0.0` (major version bump) and modifies `auth/session.js`. Within 60 seconds of opening, Sherlock scans the PR files, checks historical incident metadata, and posts an automated review comment:
 
-```
-🔍 Sherlock Risk Assessment
+```markdown
+## Sherlock Risk Assessment
 
-Incident Probability: 38% [ELEVATED]
+**Incident Probability: 38%** · `[ELEVATED]`
 
-→ Modifies auth/session.js
-  └ Historical failure rate: 41%
-  [Source: Incident #31, Incident #18]
+### Why I'm flagging this:
+- **Modifies auth/session.js**
+  Your last 2 production incidents originated in this file. Historical failure rate for changes here is 41%.
+  `[Source: Incident #31, Incident #18]`
 
-→ jsonwebtoken 8.5.1 → 9.0.0 (major bump)
-  └ session.js:47 uses deprecated v8 signature ⚠️
-  [Source: jsonwebtoken CHANGELOG.md]
+- **jsonwebtoken 8.5.1 to 9.0.0 (major version bump)**
+  Breaking API changes detected in library changelog. You call jwt.sign() in 4 places. session.js:47 uses the deprecated v8 signature.
+  `[Source: jsonwebtoken CHANGELOG.md, call site analysis]`
 
-→ Test coverage on changed paths: 54%
-  [Source: coverage report, last CI run]
+- **Test coverage on changed paths: 54%**
+  Below your repository average of 79%. Reduced coverage on auth-critical paths increases incident risk.
+  `[Source: coverage report, last CI run]`
 
-Recommended: fix jwt.sign() at session.js:47 before merging.
+**Recommended:** Fix jwt.sign() at session.js:47 before merging.
 ```
 
 ### Act 2 — The Break (1:00–1:30)
-Engineer merges PR anyway. GitHub Actions fails. Production is down. 4 services affected. 2,400 active sessions impacted.
+The engineer ignores the warning and merges the PR anyway. GitHub Actions runs the test suite (which fails) or reports a production service crash. The gateway starts throwing `503 Service Unavailable` cascading errors. Sherlock's dashboard immediately highlights the new active incident: 4 services affected, 2,400 active sessions impacted.
 
 ### Act 3 — The Diagnosis (1:30–3:00)
-Sherlock streams its reasoning chain in real time:
+Sherlock streams its 10-step grounded reasoning chain in real-time on the dashboard:
 
 ```
 [0.8s]  Alert received — GitHub Actions failure on main
@@ -57,7 +62,7 @@ Sherlock streams its reasoning chain in real time:
 [6.8s]  Draft PR #313 opened — human approval required
 ```
 
-Sherlock references the warning it posted in Act 1. The incident was predicted. We have the receipts.
+Sherlock points directly to the warning it posted in Act 1, providing complete grounded traceability with interactive confidence dimensions and a dependency cascade map.
 
 ---
 
@@ -79,17 +84,17 @@ Every reasoning step is a separate grounded retrieval call via Azure AI Foundry 
 - `[Source: jsonwebtoken CHANGELOG.md, v9.0.0]`
 - `[Source: Incident #31, 2026-04-17]`
 
-Implementation: `backend/foundry_iq.py` — 10-step streaming chain via SSE, each step is a separate Azure OpenAI call with `response_format: json_object` and mandatory citation requirement.
+*Implementation:* `backend/foundry_iq.py` — 10-step streaming chain via SSE, each step is a separate Azure OpenAI call with `response_format: json_object` and mandatory citation requirements.
 
 ### Fabric IQ — The Analytics Intelligence Layer
 Powers the Incident Intelligence Dashboard: MTTR trends, root cause distribution, service reliability rankings, and ROI calculations derived from real Fabric semantic models over incident history.
 
-Implementation: `backend/routers/analytics.py` — Fabric-backed metrics pipeline with MTTR reduction measurement (3.4h → 0.78h, 77% reduction), cost impact at $75/hr senior developer rate.
+*Implementation:* `backend/routers/analytics.py` — Fabric-backed metrics pipeline with MTTR reduction measurement (3.4h → 0.78h, 77% reduction), cost impact at $75/hr senior developer rate.
 
 ### Work IQ — The Organizational Intelligence Layer
 When a critical incident fires, Sherlock uses Work IQ to identify the service owner from Microsoft 365 signals (past incident threads, on-call documents) and routes the Teams Adaptive Card to that specific person — not a broadcast.
 
-Implementation: `backend/routers/teams.py` — Owner-routed Adaptive Cards with one-click fix approval from Teams without needing to open GitHub.
+*Implementation:* `backend/routers/teams.py` — Owner-routed Adaptive Cards with one-click fix approval from Teams without needing to open GitHub.
 
 ---
 
@@ -110,81 +115,31 @@ Implementation: `backend/routers/teams.py` — Owner-routed Adaptive Cards with 
 
 ---
 
-## Architecture
+## Setup & Running
 
-```
-SHERLOCK
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sherlock supports both local development setup and a fully containerized Docker Compose environment for rapid evaluation.
 
-TRIGGER LAYER
-├── GitHub Actions webhook        (build failures)
-├── Alert webhooks                (Datadog, PagerDuty, Azure Monitor)
-├── GitHub PR webhook             (pre-mortem — opened, synchronize)
-├── Scheduled monitor             (Watch Mode — every 15 min)
-└── Manual                        (dashboard-triggered analysis)
+### Option A: Docker Compose (Recommended - Under 2 Minutes)
+1. Copy the environment template:
+   ```bash
+   cp .env.example .env
+   # Add your Azure OpenAI or Supabase keys to .env (leave blank to run in offline DEMO mode)
+   ```
+2. Spin up backend and frontend:
+   ```bash
+   docker compose up --build
+   ```
+3. Open `http://localhost:5173` in your browser.
 
-REASONING LAYER — Azure AI Foundry (Foundry IQ)
-├── Log reader + error signature extractor
-├── Commit + diff analyzer
-├── Dependency API surface differ  (semver + changelog retrieval)
-├── Call site analyzer
-├── Service dependency graph traverser
-├── Confidence anatomy scorer      (4 dimensions, grounded citations)
-├── Fix generator                  (draft PR only — never auto-merges)
-└── Runbook writer
+### Option B: Local Manual Setup
 
-MEMORY LAYER — Supabase
-├── Incident history               (full reasoning traces, immutable)
-├── Pattern signatures             (pgvector embedding similarity)
-├── PR risk history + accuracy     (tracks prediction accuracy)
-├── Service dependency graph
-└── Audit log                      (every decision, every citation)
-
-ANALYTICS LAYER — Microsoft Fabric (Fabric IQ)
-├── MTTR trend pipeline
-├── ROI calculator
-├── Service reliability scores
-└── Root cause distribution
-
-NOTIFICATION LAYER — Work IQ + Teams
-├── Owner-routed Teams Adaptive Cards
-├── One-click fix approval
-├── GitHub PR comments             (pre-mortem scores)
-└── "What's still safe" updates
-
-PRIVACY LAYER
-└── Entire system deploys inside YOUR Azure tenant
-    Nothing phones home. Full compliance boundary maintained.
-    Every decision audit-logged and immutable.
-```
-
----
-
-## Technology Stack
-
-| Layer | Technology | Why |
-|-------|-----------|-----|
-| Reasoning | Azure AI Foundry (Foundry IQ) | Grounded retrieval, citations, multi-step agentic reasoning |
-| Analytics | Microsoft Fabric (Fabric IQ) | Semantic models for incident intelligence |
-| Org intelligence | Microsoft 365 Work IQ | Service owner routing |
-| Incident memory | Supabase (Postgres + pgvector) | Structured storage + embedding similarity |
-| Backend | Python FastAPI | Webhook handling, SSE streaming, orchestration |
-| Frontend | React + TypeScript (Vite) | Streaming reasoning UI, cascade map |
-| Teams | Adaptive Cards | Owner-routed alerts, one-click fix approval |
-| GitHub | Webhooks + GitHub API | PR comments, draft PR creation |
-| Deployment | Azure Container Apps | Inside customer tenant, autoscaling |
-
----
-
-## Setup
-
-### 1. Clone and configure
+#### 1. Clone and Configure
 ```bash
-git clone https://github.com/your-username/sherlock
-cd sherlock
+git clone https://github.com/nankalon-code/SHERLOCK.git
+cd SHERLOCK
 ```
 
-### 2. Backend
+#### 2. Backend Setup
 ```bash
 cd backend
 cp .env.example .env
@@ -193,52 +148,53 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-### 3. Frontend
+#### 3. Frontend Setup
 ```bash
-cd frontend
+cd ../frontend
 npm install
 npm run dev
 ```
 
-### 4. Configure webhooks
-- GitHub: `POST https://your-domain/api/webhooks/github/pr` (events: `pull_request`)
-- GitHub Actions: `POST https://your-domain/api/webhooks/github/actions`
-- Alerts: `POST https://your-domain/api/webhooks/alert`
-
-### 5. Supabase schema
-Run `backend/database.py::SCHEMA_SQL` in your Supabase SQL editor.
+#### 4. Supabase Database Schema
+Run the SQL queries in `schema.sql` (found in the root directory) directly inside the Supabase SQL editor to initialize tables and enable `pgvector` index support.
 
 ---
 
-## Safety Guarantees
+## 🧪 Test Suite
 
-- **Never auto-merges**. Every fix is a draft PR requiring human approval.
-- **Read-only during active incidents**. Writes only after explicit approval.
-- **Every claim cites a source**. If Foundry IQ can't ground a claim: "uncertain — insufficient data."
-- **Pre-mortem posts within 60 seconds** (measured: 47s average in demo).
-- **Fully tenant-isolated**. Deploys inside your Azure tenant. No data leaves.
-- **Immutable audit log**. Every reasoning step, citation, and decision is permanently recorded.
+We maintain a comprehensive backend unit test suite covering the reasoning chain step execution and webhook HMAC signature parsing.
+
+To install dependencies and execute tests locally:
+```bash
+cd backend
+pip install -r requirements.txt
+set PYTHONPATH=.
+pytest
+```
 
 ---
 
-## Rubric Self-Assessment
+## 🛡️ Error Handling & Resiliency
 
-| Criterion | Target | Delivery |
-|-----------|--------|---------|
-| Accuracy & Relevance | 19/20 | Real repos, real logs, Foundry IQ grounded retrieval — zero mocked data in live mode |
-| Reasoning & Multi-step | 19/20 | 10-step streaming chain, each step a separate grounded retrieval call with explicit citations |
-| Creativity & Originality | 14/15 | Pre-mortem prediction (no other tool does this), cascade mapping, similar incident memory |
-| User Experience | 14/15 | Three-act demo, streaming chain, Teams one-click approval, Fabric ROI dashboard |
-| Reliability & Safety | 19/20 | Read-only during incidents, confidence anatomy, audit log, draft PRs only, human approval required |
+Sherlock is designed for production stability with graceful fallback states:
+*   **Offline / Demo Mode**: If no Azure OpenAI or Supabase environment variables are detected in `.env`, Sherlock automatically falls back to static cached mock reasoning data, enabling immediate offline assessment without crashing.
+*   **SSE Failure Tolerance**: The frontend's `IncidentView` automatically attempts to establish a live EventSource connection. If the API is unreachable or drops mid-stream, it falls back seamlessly to the local browser simulator and displays a warning banner.
+*   **Webhook Signature Verification**: Webhooks from GitHub are authenticated using the `X-Hub-Signature-256` HMAC-SHA256 signature to prevent injection of malicious event triggers.
+
+---
+
+## 🎯 Design Goals & Rubric Alignment
+
+*   **Accuracy & Relevance**: Employs Foundry IQ grounded retrieval over real repositories, changelogs, and incident metadata, minimizing hallucination risk.
+*   **Multi-Step Reasoning**: Streams a granular 10-step diagnostic chain, with each phase backed by a focused, context-aware LLM call.
+*   **Safety Guarantees**: Sherlock is completely read-only during active incidents and will **never** auto-merge a fix. All changes are submitted as draft PRs requiring explicit engineer review.
+*   **Privacy & Control**: Designed to deploy inside the user's secure Azure tenant, preventing telemetry leakage and maintaining complete data isolation.
 
 ---
 
 ## Prizes Targeted
 
-- **Best Reasoning Agent** — Pre-mortem + cascade map + similar incident memory = most complete reasoning story
-- **Best Use of IQ Tools** — All three IQs integrated meaningfully: Foundry IQ (reasoning), Fabric IQ (analytics), Work IQ (routing)
-- **Top Student Award** — Built by a **first-year Computer Science student**
-- **Best Overall** — 2 AM production break is universally relatable; Sherlock is a memorable name
-
----
-
+- **Best Reasoning Agent** — Pre-mortem + cascade map + similar incident memory = most complete reasoning story.
+- **Best Use of IQ Tools** — All three IQs integrated: Foundry IQ (reasoning), Fabric IQ (analytics), Work IQ (routing).
+- **Top Student Award** — Built by a **first-year Computer Science student** (Top Student Award eligibility).
+- **Best Overall** — Sherlock resolves the universal developer headache of 2 AM on-call incidents.
