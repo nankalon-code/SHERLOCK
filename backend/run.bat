@@ -1,0 +1,3 @@
+@echo off
+echo Starting Sherlock Backend on port 8000...
+"C:\Users\APOORVA JHA\AppData\Local\Programs\Python\Python312\Scripts\uvicorn.exe" main:app --host 0.0.0.0 --port 8000 --reload
