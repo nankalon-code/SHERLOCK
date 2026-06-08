@@ -75,6 +75,7 @@ export default function IncidentView({ incidentId: _incidentId }: { incidentId: 
   const [isDone, setIsDone] = useState(false)
   const [activeTab, setActiveTab] = useState<'chain' | 'confidence' | 'cascade' | 'fix' | 'runbook'>('chain')
   const [approved, setApproved] = useState(false)
+  const [streamStatus, setStreamStatus] = useState<null | 'connecting' | 'streaming' | 'offline_fallback' | 'error'>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -82,12 +83,86 @@ export default function IncidentView({ incidentId: _incidentId }: { incidentId: 
   }, [steps])
 
   const startStreaming = () => {
-    setSteps([]); setIsDone(false); setIsStreaming(true); setActiveTab('chain'); setApproved(false)
-    let i = 0
-    const interval = setInterval(() => {
-      if (i < DEMO_STEPS.length) { setSteps(prev => [...prev, DEMO_STEPS[i]]); i++ }
-      else { clearInterval(interval); setIsStreaming(false); setIsDone(true) }
-    }, 680)
+    setSteps([])
+    setIsDone(false)
+    setIsStreaming(true)
+    setActiveTab('chain')
+    setApproved(false)
+    setStreamStatus('connecting')
+
+    let fallbackTriggered = false
+    const triggerFallback = () => {
+      if (fallbackTriggered) return
+      fallbackTriggered = true
+      setStreamStatus('offline_fallback')
+      let i = 0
+      const interval = setInterval(() => {
+        if (i < DEMO_STEPS.length) {
+          setSteps(prev => [...prev, DEMO_STEPS[i]])
+          i++
+        } else {
+          clearInterval(interval)
+          setIsStreaming(false)
+          setIsDone(true)
+        }
+      }, 680)
+    }
+
+    try {
+      const url = `http://localhost:8000/api/incidents/stream/${_incidentId}`
+      const es = new EventSource(url)
+
+      es.onopen = () => {
+        setStreamStatus('streaming')
+      }
+
+      es.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data)
+          if (data.type === 'step_start') {
+            setSteps(prev => {
+              const exists = prev.some(s => s.step === data.step)
+              if (exists) return prev
+              return [...prev, { step: data.step, label: data.label, result: null } as any]
+            })
+          } else if (data.type === 'step_complete') {
+            setSteps(prev => {
+              const updated = prev.map(s => {
+                if (s.step === data.step) {
+                  return { ...s, result: data.result }
+                }
+                return s
+              })
+              const exists = prev.some(s => s.step === data.step)
+              if (!exists) {
+                updated.push({ step: data.step, label: data.label, result: data.result } as any)
+              }
+              return updated
+            })
+          } else if (data.type === 'done') {
+            es.close()
+            setIsStreaming(false)
+            setIsDone(true)
+          }
+        } catch (err) {
+          console.error("Error parsing stream event", err)
+        }
+      }
+
+      es.onerror = () => {
+        es.close()
+        if (steps.length === 0) {
+          triggerFallback()
+        } else {
+          setStreamStatus('error')
+          setIsStreaming(false)
+          setIsDone(true) // let them view what was loaded
+        }
+      }
+    } catch (err) {
+      console.error("Failed to start event source", err)
+      triggerFallback()
+    }
   }
 
   const confidenceData = isDone ? (DEMO_STEPS[7].result as unknown) as Parameters<typeof ConfidenceAnatomy>[0]['data'] : null
@@ -160,12 +235,30 @@ export default function IncidentView({ incidentId: _incidentId }: { incidentId: 
         {/* Reasoning chain */}
         {activeTab === 'chain' && (
           <div className="reasoning-panel">
-            <div className="reasoning-header">
+            <div className="reasoning-header" style={{ display: 'flex', alignItems: 'center' }}>
               <span className="reasoning-header-dot" />
-              Foundry IQ — multi-step grounded retrieval
+              <span>Foundry IQ — multi-step grounded retrieval</span>
+              {streamStatus === 'offline_fallback' && (
+                <span className="badge badge-info" style={{ marginLeft: 10, fontSize: 9, padding: '2px 6px' }}>
+                  Simulator Fallback
+                </span>
+              )}
+              {streamStatus === 'streaming' && (
+                <span className="badge badge-success" style={{ marginLeft: 10, fontSize: 9, padding: '2px 6px' }}>
+                  Live Stream Active
+                </span>
+              )}
               <span style={{ marginLeft: 'auto', fontSize: 11 }}>Every claim cited · Read-only during diagnosis</span>
             </div>
             <div className="reasoning-body" ref={bodyRef}>
+              {streamStatus === 'error' && (
+                <div className="alert-banner warning" style={{ margin: '8px 12px', padding: '8px 12px', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14, color: 'var(--warning)', flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11v.5"/>
+                  </svg>
+                  <span style={{ fontSize: 12 }}>API stream disconnected unexpectedly. Displaying cached diagnostics.</span>
+                </div>
+              )}
               {steps.length === 0 && !isStreaming && (
                 <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)', fontFamily: 'var(--font-sans)' }}>
                   Click <strong style={{ color: 'var(--text-secondary)' }}>Run reasoning chain</strong> to start live incident analysis
