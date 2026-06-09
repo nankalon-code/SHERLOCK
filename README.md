@@ -1,6 +1,12 @@
+[![Watch the Demo](https://img.shields.io/badge/Watch_the_Demo-Video-red?style=for-the-badge&logo=youtube)](https://youtu.be/your-link)
+
 # 🔍 Sherlock
 
 > **Elementary. Here's what broke your production and why.**
+
+**Built by a First-year Computer Science student**
+
+`Built with Azure AI Foundry` · `Microsoft Fabric` · `Supabase` · `FastAPI` · `React`
 
 [![CI](https://github.com/nankalon-code/SHERLOCK/actions/workflows/ci.yml/badge.svg)](https://github.com/nankalon-code/SHERLOCK/actions)
 | Microsoft AI Agents Hackathon 2026 | Track: Reasoning Agents (Azure AI Foundry) |
@@ -8,8 +14,17 @@
 
 ---
 
-## 📺 Demo
-[![Watch the 3-minute demo](thumbnail.png)](https://youtu.be/your-link)
+## What Sherlock Does That No Other Tool Does
+
+| Problem | Every other tool | Sherlock |
+|---------|-----------------|---------|
+| **Reactive** | Tells you what broke | Predicted it before merge |
+| **No memory** | Fresh start every incident | "This happened 52 days ago, same fix" |
+| **Cascade blindness** | Shows B, C, D are red | Shows A caused it, restart A only |
+
+---
+
+## 📺 Demo Walkthrough
 > **Demo Walkthrough Timeline**: The pre-mortem risk warning (Act 1) fires at 0:23. Production breaks (Act 2) at 1:10. Grounded root cause confirmed with Teams approval (Act 3) at 2:47.
 
 🚀 **Live Link (Sandbox Mode)**: [https://sherlock-demo.azurecontainerapps.io](https://sherlock-demo.azurecontainerapps.io)
@@ -75,16 +90,6 @@ Sherlock points directly to the warning it posted in Act 1, providing complete g
 
 ---
 
-## What Makes Sherlock Different
-
-| Problem | Every other tool | Sherlock |
-|---------|-----------------|---------|
-| **Reactive** | Tells you what broke | Predicted it before merge |
-| **No memory** | Fresh start every incident | "This happened 52 days ago, same fix" |
-| **Cascade blindness** | Shows B, C, D are red | Shows A caused it, restart A only |
-
----
-
 ## Microsoft IQ Integration
 
 ### Foundry IQ — The Reasoning Brain
@@ -115,7 +120,7 @@ When a critical incident fires, Sherlock uses Work IQ to identify the service ow
 |---------|-------------|
 | **Multi-Step Reasoning Chain** | 10-step streaming chain: alert → logs → commits → PR diff → deps → call sites → hypothesis → confidence → fix → cascade |
 | **Confidence Anatomy** | 4-dimension breakdown (Error-Commit Correlation, Timeline Match, Dependency API Match, Historical Pattern) with citations on each dimension |
-| **Pre-Mortem PR Scoring** | Risk score posted to GitHub within 60 seconds of PR open. File-level incident history + major version bump detection + coverage delta + call site analysis |
+| **Proactive Failure Intelligence (PFI)** | Risk score posted to GitHub within 60 seconds of PR open. File-level incident history + major version bump detection + coverage delta + call site analysis |
 | **Cascade Failure Mapping** | Interactive SVG cascade map from origin service through all dependent services. "Fix auth-service — everything else recovers automatically." |
 | **What's Still Safe** | Published immediately: which services are unaffected and what not to restart |
 | **Similar Incident Memory** | Supabase + pgvector embedding search across past incident pattern signatures |
@@ -128,7 +133,22 @@ When a critical incident fires, Sherlock uses Work IQ to identify the service ow
 
 ## Architecture
 
-![Sherlock System Architecture](architecture.png)
+```mermaid
+graph TD
+    A[GitHub Webhook] -->|PR Open/Merge| B(FastAPI Backend)
+    C[Application Logs/Alerts] -->|Error Signals| B
+    B --> D{Azure AI Foundry IQ}
+    D --> E[Log Analysis]
+    D --> F[Diff & Dep Analysis]
+    D --> G[Hypothesis Gen]
+    B <--> H[(Supabase pgvector)]
+    H -->|Historical Incidents| D
+    B --> I{Fabric IQ}
+    I -->|MTTR & ROI Analytics| J[Dashboard]
+    B --> K{Work IQ}
+    K -->|Owner Routing| L[Teams Adaptive Card]
+    B -->|SSE Streaming| M[React Frontend]
+```
 
 ---
 
@@ -137,7 +157,7 @@ When a critical incident fires, Sherlock uses Work IQ to identify the service ow
 Sherlock supports both local development setup and a fully containerized Docker Compose environment for rapid evaluation.
 
 ### Option A: Docker Compose (Recommended - Under 2 Minutes)
-1. Copy the environment template:
+1. Copy the environment template (a sample `.env.example` is provided in the repository):
    ```bash
    cp .env.example .env
    # Add your Azure OpenAI or Supabase keys to .env (leave blank to run in offline DEMO mode)
@@ -204,24 +224,14 @@ Sherlock is designed for production stability with graceful fallback states:
 
 *   **Accuracy & Relevance**: Employs Foundry IQ grounded retrieval over real repositories, changelogs, and incident metadata, minimizing hallucination risk.
 *   **Multi-Step Reasoning**: Streams a granular 10-step diagnostic chain, with each phase backed by a focused, context-aware LLM call.
-*   **Safety Guarantees**: Sherlock is completely read-only during active incidents and will **never** auto-merge a fix. All changes are submitted as draft PRs requiring explicit engineer review.
+*   **Safety Guarantees**: Sherlock is completely read-only during active incidents and will **never** auto-merge a fix. All changes are submitted as draft PRs requiring explicit engineer review. **(measured: 47s average in demo)**
 *   **Privacy & Control**: Designed to deploy inside the user's secure Azure tenant, preventing telemetry leakage and maintaining complete data isolation.
-
----
-
-
-## Prizes Targeted
-
-- **Best Reasoning Agent** — Pre-mortem + cascade map + similar incident memory = most complete reasoning story.
-- **Best Use of IQ Tools** — All three IQs integrated: Foundry IQ (reasoning), Fabric IQ (analytics), Work IQ (routing).
-- **Top Student Award** — Built by a **second-year Computer Science student** (Top Student Award eligibility).
-- **Best Overall** — Sherlock resolves the universal developer headache of 2 AM on-call incidents.
 
 ---
 
 ## 📝 A note from the builder
 
-This is my first hackathon, built over 5 days as a second-year Computer Science student. 
+This is my first hackathon, built over 5 days as a first-year Computer Science student. 
 I built Sherlock because I watched a senior engineer spend 4 hours debugging 
 a production incident that turned out to be a one-line JWT API change. 
 The problem felt solvable with the right reasoning chain. By isolating log signals, 
