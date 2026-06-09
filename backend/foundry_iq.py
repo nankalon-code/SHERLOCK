@@ -58,7 +58,26 @@ async def run_grounded_step(step_name: str, context: dict, sources: list) -> dic
     )
     cl = get_client()
     if cl is None:
-        return {"note": "demo_mode", "step": step_name, "citations": []}
+        mock_data = {
+            "alert_intake": {"service_name": "auth-service", "error_type": "NullReferenceException", "error_location": "auth/session.js:47", "trigger": "github_actions", "citations": ["GitHub Actions run #8821"]},
+            "log_analysis": {"error_message": "NullReferenceException in auth/session.js line 47", "first_occurrence": "2026-06-08T14:23:11Z", "code_path": "auth/session.js -> jwt.sign()", "citations": ["application_logs: 2026-06-08T14:23:11Z"]},
+            "commit_analysis": {"suspicious_commits": ["PR #312 merged 2 hours ago"], "suspect_pr": 312, "overlap_files": ["auth/session.js", "middleware/verify.js"], "timeline_fit": True, "citations": ["git log: PR #312, 2026-06-08T12:09:00Z"]},
+            "pr_diff_analysis": {"changed_functions": ["jwt.sign() in session.js:47"], "new_patterns": ["jsonwebtoken 8.5.1 to 9.0.0 major bump"], "could_cause_error": True, "explanation": "PR #312 modified session token format in auth/session.js and touched middleware/verify.js", "citations": ["PR #312 diff, auth/session.js:47"]},
+            "dependency_detection": {"dependency_bumps": [{"name": "jsonwebtoken", "from": "8.5.1", "to": "9.0.0", "breaking": True}], "breaking_changes": ["jwt.sign() signature changed in v9"], "api_changes": "options parameter now required", "citations": ["jsonwebtoken CHANGELOG.md v9.0.0"]},
+            "call_site_analysis": {"call_sites": ["auth/session.js:47", "auth/refresh.js:23", "middleware/verify.js:61", "tests/auth.test.js:12"], "error_is_call_site": True, "affected_lines": ["session.js:47 uses deprecated v8 signature"], "citations": ["PR #312 diff, session.js:47"]},
+            "hypothesis_formation": {"hypothesis": "jsonwebtoken v9 introduced a breaking API change. jwt.sign() now requires an options object. session.js:47 still uses the v8 signature.", "causal_chain": "PR #312 bumped jsonwebtoken -> v9 signature change -> session.js:47 call fails -> auth-service down", "timestamp_validation": "First error 14 minutes after PR #312 merged", "citations": ["PR #312 diff", "jsonwebtoken CHANGELOG.md", "application_logs"]},
+            "confidence_scoring": {
+                "error_commit_correlation": {"score": 96, "explanation": "Error location directly inside files changed in PR #312", "citations": ["git diff PR #312, auth/session.js:47"]},
+                "timeline_match": {"score": 94, "explanation": "First error 14 minutes post-merge, consistent with cache invalidation delay", "citations": ["application logs, 2026-06-08T14:23:11Z"]},
+                "dependency_api_match": {"score": 89, "explanation": "jwt.sign() signature change confirmed in v9 changelog, matches exact error signature", "citations": ["jsonwebtoken CHANGELOG.md, v9.0.0"]},
+                "historical_pattern": {"score": 87, "explanation": "Similar jwt version-mismatch failure 52 days ago in the same service", "citations": ["Incident #31, 2026-04-17"]},
+                "overall": 91,
+                "citations": ["multi-dimensional score rollup"]
+            },
+            "fix_generation": {"fix_description": "Update jwt.sign() call at session.js:47 to use v9 signature with options object", "file_path": "auth/session.js", "line_number": 47, "old_code": "jwt.sign(payload, secret)", "new_code": "jwt.sign(payload, secret, { algorithm: 'HS256' })", "test_suggestion": "Add compatibility test for jwt.sign() v9 signature", "citations": ["jsonwebtoken CHANGELOG.md v9.0.0", "PR #312 diff"]},
+            "cascade_mapping": {"origin_service": "auth-service", "cascade_services": [{"name": "api-gateway", "reason": "Blocked on auth, returning 503", "status": "cascade"}, {"name": "user-service", "reason": "Cannot validate requests", "status": "cascade"}, {"name": "payment-service", "reason": "Auth dependency timeout", "status": "cascade"}], "healthy_services": [{"name": "notification-service", "reason": "Queue buffering"}, {"name": "data-service", "reason": "No auth dependency"}], "fix_recommendation": "Fix auth-service only. Everything else recovers automatically.", "do_not_restart": ["api-gateway", "user-service", "payment-service"], "citations": ["service dependency graph"]}
+        }
+        return mock_data.get(step_name, {"note": "demo_mode", "citations": []})
     try:
         resp = await cl.chat.completions.create(
             model=DEPLOYMENT,

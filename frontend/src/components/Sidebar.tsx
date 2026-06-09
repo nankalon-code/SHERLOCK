@@ -74,7 +74,7 @@ export default function Sidebar({ currentView, onNavigate }: Props) {
 
       <div className="sidebar-footer">
         <div style={{ fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>Sherlock v1.0</div>
-        <div>First-year CS student</div>
+        <div>Second-year CS student</div>
         <div>Microsoft AI Agents Hackathon 2026</div>
       </div>
     </aside>

@@ -65,7 +65,11 @@ async def run_pre_mortem(pr: dict, repo: dict):
             async with httpx.AsyncClient() as client:
                 res = await client.post(
                     f"https://api.github.com/repos/{repo['full_name']}/issues/{pr['number']}/comments",
-                    headers={"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"},
+                    headers={
+                        "Authorization": f"Bearer {GITHUB_TOKEN}",
+                        "Accept": "application/vnd.github+json",
+                        "User-Agent": "Sherlock-Reasoning-Agent"
+                    },
                     json={"body": "🔍 **Sherlock is analyzing this PR...** (risk assessment will appear in <60 seconds)"},
                     timeout=10,
                 )
@@ -101,17 +105,22 @@ async def run_pre_mortem(pr: dict, repo: dict):
     if GITHUB_TOKEN and repo.get("full_name"):
         try:
             async with httpx.AsyncClient() as client:
+                headers = {
+                    "Authorization": f"Bearer {GITHUB_TOKEN}",
+                    "Accept": "application/vnd.github+json",
+                    "User-Agent": "Sherlock-Reasoning-Agent"
+                }
                 if comment_id:
                     await client.patch(
                         f"https://api.github.com/repos/{repo['full_name']}/issues/comments/{comment_id}",
-                        headers={"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"},
+                        headers=headers,
                         json={"body": comment},
                         timeout=10,
                     )
                 else:
                     await client.post(
                         f"https://api.github.com/repos/{repo['full_name']}/issues/{pr['number']}/comments",
-                        headers={"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"},
+                        headers=headers,
                         json={"body": comment},
                         timeout=10,
                     )

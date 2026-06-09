@@ -6,8 +6,12 @@ async def test_run_grounded_step_demo_mode():
     # In demo mode (no Azure creds), it should return placeholder structured info with citations list
     result = await run_grounded_step("alert_intake", {}, [])
     assert isinstance(result, dict)
-    assert result.get("note") == "demo_mode"
-    assert result.get("step") == "alert_intake"
+    assert result.get("service_name") == "auth-service"
+    assert "citations" in result
+
+    # For unknown steps, it should fallback to demo mode note
+    result_fallback = await run_grounded_step("unknown_step", {}, [])
+    assert result_fallback.get("note") == "demo_mode"
 
 @pytest.mark.asyncio
 async def test_stream_incident_reasoning_steps():
