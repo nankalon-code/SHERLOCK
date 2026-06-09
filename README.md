@@ -4,8 +4,6 @@
 
 > **Elementary. Here's what broke your production and why.**
 
-**Built by a First-year Computer Science student**
-
 `Built with Azure AI Foundry` · `Microsoft Fabric` · `Supabase` · `FastAPI` · `React`
 
 [![CI](https://github.com/nankalon-code/SHERLOCK/actions/workflows/ci.yml/badge.svg)](https://github.com/nankalon-code/SHERLOCK/actions)
@@ -231,7 +229,7 @@ Sherlock is designed for production stability with graceful fallback states:
 
 ## 📝 A note from the builder
 
-This is my first hackathon, built over 5 days as a first-year Computer Science student. 
+This is my first hackathon, built over 5 days. 
 I built Sherlock because I watched a senior engineer spend 4 hours debugging 
 a production incident that turned out to be a one-line JWT API change. 
 The problem felt solvable with the right reasoning chain. By isolating log signals, 
