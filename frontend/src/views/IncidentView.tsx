@@ -65,7 +65,7 @@ export default function IncidentView({ incidentId: _incidentId }: { incidentId: 
 
         <div className="steps-list">
           {steps.map((step, idx) => (
-            <div key={idx} className={\`log-step \${step.isFinal ? 'step-warning' : (idx === 0 ? 'step-error' : 'step-info')}\`}>
+            <div key={idx} className={`log-step ${step.isFinal ? 'step-warning' : (idx === 0 ? 'step-error' : 'step-info')}`}>
               <div className="step-number">{idx + 1}</div>
               <div className="step-icon-wrapper">
                 {/* placeholder icon depending on type */}
