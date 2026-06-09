@@ -42,149 +42,124 @@ const DEMO_STEPS: ReasoningStep[] = [
 ] as any
 
 export default function IncidentView({ incidentId: _incidentId }: { incidentId: number }) {
-  const [steps, setSteps] = useState<ReasoningStep[]>(DEMO_STEPS)
+  const [steps, setSteps] = useState<ReasoningStep[]>([])
+
+  // Simulate streaming steps for interactivity
+  useEffect(() => {
+    let currentIdx = 0;
+    const interval = setInterval(() => {
+      if (currentIdx < DEMO_STEPS.length) {
+        setSteps(prev => [...prev, DEMO_STEPS[currentIdx]]);
+        currentIdx++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
   
   return (
-    <div className="incident-grid-layout">
-      {/* LEFT PANEL */}
-      <div className="panel reasoning-panel">
+    <div className="incident-grid-layout three-column">
+      {/* COLUMN 1: LEFT PANEL (Reasoning Log) */}
+      <div className="panel reasoning-panel" style={{ overflowY: 'auto' }}>
         <div className="panel-header flex justify-between items-center">
           <div>
-            <h2 className="panel-title">LIVE DIAGNOSTIC REASONING LOG</h2>
-            <div className="panel-subtitle">Case #INC-7391: E-commerce Checkout Failure</div>
+            <h2 className="panel-title" style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Diagnostic Reasoning</h2>
+            <div className="panel-subtitle">Case #INC-7391</div>
           </div>
-          <span className="badge-updating">Updating</span>
-        </div>
-        
-        <div className="dropdown-container">
-          <select className="live-dropdown">
-            <option>Live today</option>
-          </select>
-          <span className="live-dot"></span>
+          <span className="badge-updating" style={{ background: steps.length === DEMO_STEPS.length ? 'rgba(46,125,50,0.1)' : 'rgba(79,142,247,0.1)', color: steps.length === DEMO_STEPS.length ? '#4ade80' : '#4f8ef7', border: `1px solid ${steps.length === DEMO_STEPS.length ? 'rgba(46,125,50,0.3)' : 'rgba(79,142,247,0.3)'}` }}>
+            {steps.length === DEMO_STEPS.length ? 'Resolved' : 'Active'}
+          </span>
         </div>
 
-        <div className="steps-list">
-          {steps.map((step, idx) => (
-            <div key={idx} className={`log-step ${step.isFinal ? 'step-warning' : (idx === 0 ? 'step-error' : 'step-info')}`}>
-              <div className="step-number">{idx + 1}</div>
-              <div className="step-icon-wrapper">
-                {/* placeholder icon depending on type */}
-                <div className="icon-circle">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <circle cx="12" cy="12" r="10"/>
-                  </svg>
+        <div className="steps-list" style={{ marginTop: '16px' }}>
+          {DEMO_STEPS.map((step, idx) => {
+            const isDone = idx < steps.length - 1 || steps.length === DEMO_STEPS.length;
+            const isActive = idx === steps.length - 1 && steps.length < DEMO_STEPS.length;
+            const isPending = idx >= steps.length;
+            let stepClass = 'pending';
+            if (isDone) stepClass = 'done';
+            if (isActive) stepClass = 'active';
+
+            return (
+              <div key={idx} className={`log-step ${stepClass}`} style={{ marginBottom: '16px', paddingLeft: '16px', borderLeft: '2px solid transparent' }}>
+                <div className="step-content">
+                  <div className="step-header flex justify-between" style={{ marginBottom: '4px' }}>
+                    <span className="step-title" style={{ color: isActive ? '#fff' : (isDone ? '#a0aec0' : '#4a5568'), fontWeight: isActive ? 600 : 500, fontSize: '13px' }}>{step.title}</span>
+                    <span className="step-time" style={{ color: '#718096', fontSize: '11px', fontFamily: '"JetBrains Mono", monospace' }}>{isDone || isActive ? `+${step.elapsed}s` : '--'}</span>
+                  </div>
+                  <div className="step-desc" style={{ color: isActive ? '#e2e8f0' : (isDone ? '#718096' : '#4a5568'), fontSize: '12px', lineHeight: '1.4' }}>{step.desc}</div>
+                  {isActive && <div className="step-progress-bar"></div>}
                 </div>
               </div>
-              <div className="step-content">
-                <div className="step-header">
-                  <span className="step-title">{step.title}</span>
-                  <span className="step-time">{step.time}</span>
-                </div>
-                <div className="step-desc">{step.desc}</div>
-                <div className="step-status">
-                  Status: <span>{step.status}</span>
-                </div>
-                <div className="step-progress-bar"></div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="right-panels">
-        {/* TOP RIGHT PANEL */}
-        <div className="panel cascade-panel">
-          <div className="panel-header flex justify-between">
-            <div>
-              <h2 className="panel-title">INTERACTIVE DEPENDENCY CASCADE MAP</h2>
-              <div className="panel-subtitle">Case #INC-7391</div>
-            </div>
-            <div className="more-options">...</div>
+      {/* COLUMN 2: CENTER PANEL (Cascade Map & Stats) */}
+      <div className="panel cascade-panel flex flex-col" style={{ padding: '24px' }}>
+        <div className="stats-row">
+          <div className="stat-box">
+            <div className="stat-label">Affected Services</div>
+            <div className="stat-value danger">4</div>
           </div>
-          <div className="map-container">
-            {/* We will implement CSS-based map or just include CascadeMap component if it fits, but user wants it to look like the image exactly */}
-            {/* For now, placeholder matching image */}
-            <CascadeMap data={DEMO_STEPS[9].result as any} />
+          <div className="stat-box">
+            <div className="stat-label">Active Sessions Impacted</div>
+            <div className="stat-value warning">2,400</div>
           </div>
-          <div className="map-legend">
-            <span className="legend-item"><span className="dot dot-critical"></span> Critical</span>
-            <span className="legend-item"><span className="dot dot-error"></span> Error</span>
-            <span className="legend-item"><span className="dot dot-warn"></span> Warn</span>
-            <span className="legend-item"><span className="dot dot-healthy"></span> Healthy</span>
+          <div className="stat-box">
+            <div className="stat-label">Time Elapsed</div>
+            <div className="stat-value">01:14</div>
           </div>
         </div>
 
-        {/* BOTTOM RIGHT PANEL */}
-        <div className="panel confidence-panel">
-          <div className="panel-header flex justify-between">
-            <div>
-              <h2 className="panel-title">INCIDENT CONFIDENCE GRID</h2>
-              <div className="panel-subtitle">2x2 Matrix</div>
-            </div>
-            <div className="more-options">...</div>
-          </div>
-          <div className="grid-2x2-container">
-            <div className="matrix-labels x-labels flex justify-between">
-              <span>High</span>
-              <span>Low</span>
-            </div>
-            <div className="matrix-labels y-labels">
-              <span>High</span>
-              <span>Low</span>
-            </div>
-            <div className="matrix-grid">
-              <div className="quadrant q-tl">
-                <div className="q-header">
-                  <span>Payment Gateway Failure</span>
-                  <span className="q-score">89.4%</span>
-                </div>
-                <div className="q-body">
-                  <strong>Root Cause Hypothesis</strong>
-                  <p>Payment Gateway concurrent failure</p>
-                  <strong>Confidence Score: </strong> 89.4%
-                  <br/><br/>
-                  <strong>Evidence:</strong>
-                  <ul>
-                    <li>Latency spike, Error correlation, 7 previous patterns matching</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="quadrant q-tr">
-                <div className="q-header">
-                  <span>AWS Region Issue</span>
-                  <span className="q-score">21.2%</span>
-                </div>
-                <div className="q-body">
-                  <span className="high-conf-text">HIGH CONFIDENCE (89.4%)</span>
-                  <br/>
-                  <strong>Confidence Score: </strong> 87.2%
-                  <br/><br/>
-                  <strong>Evidence:</strong>
-                  <ul>
-                    <li>Latency spike</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="quadrant q-bl">
-                <div className="q-header">
-                  <span>Cache Miss</span>
-                  <span className="q-score">14.5%</span>
-                </div>
-              </div>
-              <div className="quadrant q-br">
-                <div className="q-header">
-                  <span>Code Deploy</span>
-                  <span className="q-score">6.1%</span>
-                </div>
-              </div>
-            </div>
-            <div className="matrix-labels x-labels bottom flex justify-between">
-              <span>High</span>
-              <span>Low</span>
-            </div>
+        <div className="panel-header flex justify-between" style={{ marginTop: '8px' }}>
+          <div>
+            <h2 className="panel-title" style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dependency Cascade Map</h2>
+            <div className="panel-subtitle">Originating from auth-service</div>
           </div>
         </div>
+        <div className="map-container flex-1" style={{ background: '#0a0d14', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <CascadeMap data={DEMO_STEPS[9].result as any} />
+        </div>
+      </div>
+
+      {/* COLUMN 3: RIGHT PANEL (Action & Confidence) */}
+      <div className="panel action-panel" style={{ overflowY: 'auto', padding: '24px' }}>
+        <h2 className="action-panel-title">Resolution Intelligence</h2>
+        
+        <div className="confidence-container" style={{ marginBottom: '24px' }}>
+          <div className="panel-header">
+            <h2 className="panel-title" style={{ fontSize: '13px', color: '#a0aec0', marginBottom: '12px' }}>CONFIDENCE ANATOMY</h2>
+          </div>
+          <ConfidenceAnatomy scores={(DEMO_STEPS[7].result as any) || {}} />
+        </div>
+
+        <div className="fix-recommendation">
+          <h3>✅ Fix Recommendation</h3>
+          <p style={{ color: '#d4daf0', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+            Root cause confirmed in <strong>auth/session.js:47</strong>. 
+            The <code>jsonwebtoken</code> major version bump (v8 → v9) introduced a breaking signature change. 
+            Fix `auth-service` only. Everything else recovers automatically.
+          </p>
+        </div>
+
+        <div className="do-not-restart">
+          <h3>⚠️ Do Not Restart</h3>
+          <ul>
+            <li>api-gateway</li>
+            <li>user-service</li>
+            <li>payment-service</li>
+          </ul>
+        </div>
+
+        <button className="primary-btn flex items-center justify-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+          Approve PR #313 (One-Click Fix)
+        </button>
       </div>
     </div>
   )
