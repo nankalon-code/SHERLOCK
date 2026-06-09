@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Sidebar from './components/Sidebar'
+import Navbar from './components/Navbar'
 import Dashboard from './views/Dashboard'
 import IncidentView from './views/IncidentView'
 import WatchMode from './views/WatchMode'
@@ -9,7 +9,7 @@ import PreMortem from './views/PreMortem'
 export type View = 'dashboard' | 'incident' | 'watch' | 'analytics' | 'pre-mortem'
 
 export default function App() {
-  const [view, setView] = useState<View>('dashboard')
+  const [view, setView] = useState<View>('incident')
   const [activeIncidentId, setActiveIncidentId] = useState<number>(47)
 
   const navigateTo = (v: View, incidentId?: number) => {
@@ -18,9 +18,9 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <Sidebar currentView={view} onNavigate={navigateTo} />
-      <main className="main-content">
+    <div className="app flex-col">
+      <Navbar />
+      <main className="main-content flex-1">
         {view === 'dashboard' && <Dashboard onNavigate={navigateTo} />}
         {view === 'incident' && <IncidentView incidentId={activeIncidentId} />}
         {view === 'watch' && <WatchMode />}
