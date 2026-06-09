@@ -225,14 +225,4 @@ Sherlock is designed for production stability with graceful fallback states:
 *   **Safety Guarantees**: Sherlock is completely read-only during active incidents and will **never** auto-merge a fix. All changes are submitted as draft PRs requiring explicit engineer review. **(measured: 47s average in demo)**
 *   **Privacy & Control**: Designed to deploy inside the user's secure Azure tenant, preventing telemetry leakage and maintaining complete data isolation.
 
----
 
-## 📝 A note from the builder
-
-This is my first hackathon, built over 5 days. 
-I built Sherlock because I watched a senior engineer spend 4 hours debugging 
-a production incident that turned out to be a one-line JWT API change. 
-The problem felt solvable with the right reasoning chain. By isolating log signals, 
-git diffs, and library changelogs into discrete grounded steps, we can diagnose 
-cascading incidents in seconds rather than hours. This project represents my vision 
-for the future of developer tooling—built with the power of Azure AI Foundry.
