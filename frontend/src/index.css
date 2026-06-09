@@ -452,3 +452,5 @@ body {
 .w-full { width: 100%; }
 .space-y > * + * { margin-top: 12px; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@import url('./custom.css');
