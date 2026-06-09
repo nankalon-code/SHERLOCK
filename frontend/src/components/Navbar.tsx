@@ -1,6 +1,11 @@
 import React from 'react';
 
-export default function Navbar() {
+interface NavbarProps {
+  currentView: string;
+  onNavigate: (view: any) => void;
+}
+
+export default function Navbar({ currentView, onNavigate }: NavbarProps) {
   return (
     <nav className="navbar">
       <div className="navbar-left">
@@ -14,10 +19,10 @@ export default function Navbar() {
           </div>
         </div>
         <div className="navbar-links">
-          <a href="#" className="active">Incidents</a>
-          <a href="#">Reports</a>
-          <a href="#">Alerts</a>
-          <a href="#">Settings</a>
+          <a href="#" className={currentView === 'incident' ? 'active' : ''} onClick={(e) => { e.preventDefault(); onNavigate('incident'); }}>Incidents</a>
+          <a href="#" className={currentView === 'dashboard' ? 'active' : ''} onClick={(e) => { e.preventDefault(); onNavigate('dashboard'); }}>Reports</a>
+          <a href="#" className={currentView === 'watch' ? 'active' : ''} onClick={(e) => { e.preventDefault(); onNavigate('watch'); }}>Alerts</a>
+          <a href="#" className={currentView === 'analytics' ? 'active' : ''} onClick={(e) => { e.preventDefault(); onNavigate('analytics'); }}>Analytics</a>
         </div>
       </div>
       <div className="navbar-right">
@@ -27,14 +32,14 @@ export default function Navbar() {
           </svg>
           <input type="text" placeholder="Search" />
         </div>
-        <button className="icon-btn">
+        <button className="icon-btn hover-action">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M10 2a4 4 0 00-4 4v4l-2 2v2h12v-2l-2-2V6a4 4 0 00-4-4zM10 18a2 2 0 01-2-2h4a2 2 0 01-2 2z"/>
           </svg>
         </button>
-        <div className="user-profile">
-          <div className="avatar">DR</div>
-          <span>David R.</span>
+        <div className="user-profile interactive-profile">
+          <div className="avatar">US</div>
+          <span>User</span>
         </div>
       </div>
     </nav>

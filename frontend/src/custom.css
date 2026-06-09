@@ -281,3 +281,6 @@
   padding: 40px 0;
 }
 .y-labels span { transform: rotate(-90deg); transform-origin: left center; width: 40px; display: inline-block;}
+
+.interactive-profile { cursor: pointer; transition: opacity 0.2s; }
+.interactive-profile:hover { opacity: 0.8; }

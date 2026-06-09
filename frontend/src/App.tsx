@@ -19,7 +19,7 @@ export default function App() {
 
   return (
     <div className="app flex-col">
-      <Navbar />
+      <Navbar currentView={view} onNavigate={navigateTo} />
       <main className="main-content flex-1">
         {view === 'dashboard' && <Dashboard onNavigate={navigateTo} />}
         {view === 'incident' && <IncidentView incidentId={activeIncidentId} />}
