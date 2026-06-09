@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import CascadeMap from '../components/CascadeMap'
 import ConfidenceAnatomy from '../components/ConfidenceAnatomy'
 
@@ -76,7 +76,6 @@ export default function IncidentView({ incidentId: _incidentId }: { incidentId: 
           {DEMO_STEPS.map((step, idx) => {
             const isDone = idx < steps.length - 1 || steps.length === DEMO_STEPS.length;
             const isActive = idx === steps.length - 1 && steps.length < DEMO_STEPS.length;
-            const isPending = idx >= steps.length;
             let stepClass = 'pending';
             if (isDone) stepClass = 'done';
             if (isActive) stepClass = 'active';
@@ -133,7 +132,7 @@ export default function IncidentView({ incidentId: _incidentId }: { incidentId: 
           <div className="panel-header">
             <h2 className="panel-title" style={{ fontSize: '13px', color: '#a0aec0', marginBottom: '12px' }}>CONFIDENCE ANATOMY</h2>
           </div>
-          <ConfidenceAnatomy scores={(DEMO_STEPS[7].result as any) || {}} />
+          <ConfidenceAnatomy data={(DEMO_STEPS[7].result as any) || {}} />
         </div>
 
         <div className="fix-recommendation">
